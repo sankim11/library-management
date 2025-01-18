@@ -10,6 +10,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: MemberRepository::class)]
 #[ApiResource]
@@ -20,13 +21,18 @@ class Member implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 50)]
+    #[Assert\NotBlank(message: "Name cannot be blank.")]
+    #[Assert\Length(max: 50, maxMessage: "Name cannot exceed 50 characters.")]
     private ?string $name = null;
 
-    #[ORM\Column(length: 255, unique: true)]
+    #[ORM\Column(length: 50, unique: true)]
+    #[Assert\NotBlank(message: "Email cannot be blank.")]
+    #[Assert\Email(message: "The email '{{ value }}' is not valid.")]
     private ?string $email = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 50)]
+    #[Assert\NotBlank(message: "Password cannot be blank.")]
     private ?string $password = null;
 
     #[ORM\Column(type: 'string', enumType: Role::class)]
@@ -134,6 +140,6 @@ class Member implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getUserIdentifier(): string
     {
-        return $this->email; // The unique identifier for the user
+        return $this->email;
     }
 }

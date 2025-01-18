@@ -6,6 +6,7 @@ use App\Repository\BookRepository;
 use ApiPlatform\Metadata\ApiResource;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: BookRepository::class)]
 #[ApiResource]
@@ -16,19 +17,25 @@ class Book
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 50)]
+    #[Assert\NotBlank(message: "Title is required.")]
     private ?string $title = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 50)]
+    #[Assert\NotBlank(message: "Author is required.")]
     private ?string $author = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 50)]
+    #[Assert\NotBlank(message: "ISBN is required.")]
     private ?string $isbn = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Assert\NotBlank(message: "Published date is required.")]
     private ?\DateTimeInterface $publishedDate = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Quantity is required.")]
+    #[Assert\Positive(message: "Quantity must be a positive number.")]
     private ?int $quantity = null;
 
     public function getId(): ?int
