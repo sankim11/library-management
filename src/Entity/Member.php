@@ -2,16 +2,18 @@
 
 namespace App\Entity;
 
+use App\Enum\Role;
 use App\Repository\MemberRepository;
 use ApiPlatform\Metadata\ApiResource;
-use App\Enum\Role;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: MemberRepository::class)]
 #[ApiResource]
-class Member
+class Member implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -21,19 +23,16 @@ class Member
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, unique: true)]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
     private ?string $password = null;
 
     #[ORM\Column(type: 'string', enumType: Role::class)]
-    private ?Role $role = null;
+    private ?Role $role = Role::MEMBER;
 
-    /**
-     * @var Collection<int, Loan>
-     */
-    #[ORM\OneToMany(targetEntity: Loan::class, mappedBy: 'member')]
+    #[ORM\OneToMany(mappedBy: 'member', targetEntity: Loan::class)]
     private Collection $loans;
 
     public function __construct()
@@ -87,6 +86,11 @@ class Member
         return $this->role;
     }
 
+    public function getRoles(): array
+    {
+        return ['ROLE_' . $this->role->value];
+    }
+
     public function setRole(Role $role): static
     {
         $this->role = $role;
@@ -112,15 +116,24 @@ class Member
         return $this;
     }
 
-    public function removeBook(Loan $loan): static
+    public function removeLoan(Loan $loan): static
     {
         if ($this->loans->removeElement($loan)) {
-            // set the owning side to null (unless already changed)
             if ($loan->getMember() === $this) {
                 $loan->setMember(null);
             }
         }
 
         return $this;
+    }
+
+    public function eraseCredentials(): void
+    {
+        // Clear any sensitive data here, such as plain-text passwords
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email; // The unique identifier for the user
     }
 }

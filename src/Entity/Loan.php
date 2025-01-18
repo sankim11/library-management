@@ -2,9 +2,9 @@
 
 namespace App\Entity;
 
+use App\Enum\LoanStatus;
 use App\Repository\LoanRepository;
 use ApiPlatform\Metadata\ApiResource;
-use App\Enum\LoanStatus;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -17,11 +17,11 @@ class Loan
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne]
+    #[ORM\ManyToOne(targetEntity: Member::class, inversedBy: 'loans')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Member $member = null;
 
-    #[ORM\ManyToOne]
+    #[ORM\ManyToOne(targetEntity: Book::class)]
     #[ORM\JoinColumn(nullable: false)]
     private ?Book $book = null;
 
@@ -33,7 +33,6 @@ class Loan
 
     #[ORM\Column(type: 'string', enumType: LoanStatus::class)]
     private ?LoanStatus $status = LoanStatus::ACTIVE;
-
 
     public function getId(): ?int
     {
@@ -96,6 +95,7 @@ class Loan
     public function setStatus(LoanStatus $status): static
     {
         $this->status = $status;
+
         return $this;
     }
 }

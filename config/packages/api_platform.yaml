@@ -1,7 +1,16 @@
 api_platform:
-    title: Hello API Platform
-    version: 1.0.0
+    title: 'Library Management System API'
+    description: 'API for managing books, members, loans, and reservations.'
+    version: '1.0.0'
     defaults:
         stateless: true
         cache_headers:
             vary: ['Content-Type', 'Authorization', 'Origin']
+    mapping:
+        paths: ['%kernel.project_dir%/src/Entity']
+    enable_swagger_ui: true
+    enable_re_doc: true
+    enable_entrypoint: true
+    enable_docs: true
+    swagger:
+        versions: [3]
