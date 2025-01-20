@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Repository\MemberRepository;
 use App\Service\MemberService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -10,10 +11,12 @@ use Symfony\Component\Routing\Annotation\Route;
 class MemberController
 {
     private MemberService $memberService;
+    private MemberRepository $memberRepository;
 
-    public function __construct(MemberService $memberService)
+    public function __construct(MemberService $memberService, MemberRepository $memberRepository)
     {
         $this->memberService = $memberService;
+        $this->memberRepository = $memberRepository;
     }
 
     #[Route('/member', name: 'create_member', methods: ['POST'])]
@@ -36,6 +39,51 @@ class MemberController
                 'message' => 'Member created successfully!',
                 'member_id' => $member->getId(),
             ], JsonResponse::HTTP_CREATED);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+        }
+    }
+
+    #[Route('/members', name: 'get_all_members', methods: ['GET'])]
+    public function getAllMembers(): JsonResponse
+    {
+        $members = $this->memberRepository->findAll();
+
+        $response = array_map(fn($member) => [
+            'id' => $member->getId(),
+            'name' => $member->getName(),
+            'email' => $member->getEmail(),
+            'role' => $member->getRole()->value,
+        ], $members);
+
+        return new JsonResponse($response, JsonResponse::HTTP_OK);
+    }
+
+    #[Route('/member/{id}', name: 'get_member', methods: ['GET'])]
+    public function getMember(int $id): JsonResponse
+    {
+        $member = $this->memberRepository->find($id);
+
+        if (!$member) {
+            return new JsonResponse(['error' => 'Member not found'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $response = [
+            'id' => $member->getId(),
+            'name' => $member->getName(),
+            'email' => $member->getEmail(),
+            'role' => $member->getRole()->value,
+        ];
+
+        return new JsonResponse($response, JsonResponse::HTTP_OK);
+    }
+
+    #[Route('/member/{id}', name: 'delete_member', methods: ['DELETE'])]
+    public function deleteMember(int $id): JsonResponse
+    {
+        try {
+            $this->memberService->deleteMember($id);
+            return new JsonResponse(['message' => 'Member deleted successfully'], JsonResponse::HTTP_OK);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
         }

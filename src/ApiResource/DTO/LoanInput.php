@@ -2,25 +2,24 @@
 
 namespace App\ApiResource\DTO;
 
-use App\Entity\Book;
-use App\Entity\Member;
 use Symfony\Component\Validator\Constraints as Assert;
 
 class LoanInput
 {
-    #[Assert\NotBlank(message: "Member is required.")]
-    public ?Member $member = null;
+    #[Assert\NotBlank(message: "Member ID is required.")]
+    public int $member_id;
 
-    #[Assert\NotBlank(message: "Book is required.")]
-    public ?Book $book = null;
+    #[Assert\NotBlank(message: "Book ID is required.")]
+    public int $book_id;
 
     #[Assert\NotBlank(message: "Loan date is required.")]
-    #[Assert\Type("\DateTimeInterface")]
-    public ?\DateTimeInterface $loanDate = null;
+    #[Assert\DateTime(message: "Loan date must be a valid date in YYYY-MM-DD format.")]
+    public string $loan_date;
 
-    #[Assert\Type("\DateTimeInterface")]
-    public ?\DateTimeInterface $returnDate = null;
+    #[Assert\DateTime(message: "Return date must be a valid date in YYYY-MM-DD format.")]
+    public ?string $return_date = null;
 
     #[Assert\NotBlank(message: "Loan status is required.")]
+    #[Assert\Choice(choices: ["ACTIVE", "COMPLETED"], message: "Invalid status value. Allowed values are: ACTIVE, COMPLETED.")]
     public string $status;
 }

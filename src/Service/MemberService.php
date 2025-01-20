@@ -47,4 +47,16 @@ class MemberService
 
         return $member;
     }
+
+    public function deleteMember(int $id): void
+    {
+        $member = $this->entityManager->getRepository(Member::class)->find($id);
+
+        if (!$member) {
+            throw new ValidationException('Member not found');
+        }
+
+        $this->entityManager->remove($member);
+        $this->entityManager->flush();
+    }
 }

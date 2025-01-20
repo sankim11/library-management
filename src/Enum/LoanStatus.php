@@ -5,7 +5,7 @@ namespace App\Enum;
 enum LoanStatus: string
 {
     case ACTIVE = 'ACTIVE';
-    case COMPLETED = 'COMPLETED';
+    case RETURNED = 'RETURNED';
     case OVERDUE = 'OVERDUE';
 
     public static function getStatuses(): array
