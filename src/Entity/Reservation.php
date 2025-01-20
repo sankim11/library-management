@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\ReservationStatus;
 use App\Repository\ReservationRepository;
 use ApiPlatform\Metadata\ApiResource;
 use Doctrine\DBAL\Types\Types;
@@ -26,6 +27,9 @@ class Reservation
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $reservationDate = null;
+
+    #[ORM\Column(type: 'string', enumType: ReservationStatus::class)]
+    private ?ReservationStatus $status = ReservationStatus::PENDING;
 
     public function getId(): ?int
     {
@@ -64,6 +68,18 @@ class Reservation
     public function setReservationDate(\DateTimeInterface $reservationDate): static
     {
         $this->reservationDate = $reservationDate;
+
+        return $this;
+    }
+
+    public function getStatus(): ?ReservationStatus
+    {
+        return $this->status;
+    }
+
+    public function setStatus(ReservationStatus $status): static
+    {
+        $this->status = $status;
 
         return $this;
     }

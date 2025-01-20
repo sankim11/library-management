@@ -20,6 +20,6 @@ class LoanInput
     public ?string $return_date = null;
 
     #[Assert\NotBlank(message: "Loan status is required.")]
-    #[Assert\Choice(choices: ["ACTIVE", "COMPLETED"], message: "Invalid status value. Allowed values are: ACTIVE, COMPLETED.")]
+    #[Assert\Choice(choices: ["ACTIVE", "OVERDUE", "COMPLETED"], message: "Invalid status value. Allowed values are: ACTIVE, OVERDUE, COMPLETED.")]
     public string $status;
 }

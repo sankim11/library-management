@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Exception\ValidationException;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
@@ -24,7 +24,7 @@ class SecurityController
 
         // Check if user is instance of meber
         if (!$user instanceof \App\Entity\Member) {
-            throw new ValidationException('Invalid user credentials.', JsonResponse::HTTP_UNAUTHORIZED);
+            throw new ValidationException('Invalid user credentials.', Response::HTTP_UNAUTHORIZED);
         }
 
         return new JsonResponse([
@@ -34,6 +34,6 @@ class SecurityController
                 'email' => $user->getEmail(),
                 'roles' => $user->getRoles(),
             ],
-        ], JsonResponse::HTTP_OK);
+        ], Response::HTTP_OK);
     }
 }

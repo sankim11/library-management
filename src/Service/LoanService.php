@@ -29,6 +29,11 @@ class LoanService
         $loan->setReturnDate($returnDate);
         $loan->setStatus($status);
 
+        $errors = $this->validator->validate($loan);
+        if (count($errors) > 0) {
+            throw new \Exception((string) $errors);
+        }
+
         $book->setQuantity($book->getQuantity() - 1);
 
         $this->entityManager->persist($loan);
@@ -37,6 +42,7 @@ class LoanService
 
         return $loan;
     }
+
 
     public function returnLoan(Loan $loan): Loan
     {
