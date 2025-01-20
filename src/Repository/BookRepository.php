@@ -40,4 +40,11 @@ class BookRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+
+    public function findAllIncludingDeleted(): array
+    {
+        return $this->createQueryBuilder('b')
+            ->getQuery()
+            ->getResult();
+    }
 }
