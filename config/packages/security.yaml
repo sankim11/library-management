@@ -14,17 +14,31 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
 
+        sign_up:
+            pattern: ^/api/sign_up
+            stateless: true
+            security: false
+
         login:
-            pattern: ^/api/login
+            pattern: ^/api/sign_in
             stateless: true
             json_login:
-                check_path: /api/login
+                check_path: /api/sign_in
                 username_path: email
                 password_path: password
+                success_handler: App\Security\LoginSuccessHandler
+                failure_handler: App\Security\LoginFailureHandler
+            entry_point: App\Security\ApiAuthenticationEntryPoint
 
         api:
             pattern: ^/api
             stateless: true
             jwt: ~
+            custom_authenticators:
+                - App\Security\Authenticator\ApiAuthenticator
+            entry_point: App\Security\ApiAuthenticationEntryPoint
 
     access_control:
+        - { path: ^/api/sign_in, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/sign_up, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }

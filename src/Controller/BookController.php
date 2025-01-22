@@ -15,11 +15,27 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class BookController
 {
+    private ValidatorInterface $validator;
+    private BookService $bookService;
+
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private ValidatorInterface $validator,
-        private BookService $bookService
-    ) {}
+        ValidatorInterface $validator,
+        BookService $bookService
+    ) {
+        $this->validator = $validator;
+        $this->bookService = $bookService;
+    }
+
+    #[Route('/api/get_books', name: 'get_books', methods: ['GET'])]
+    public function getBooks(): JsonResponse
+    {
+        try {
+            $books = $this->bookService->getBooks();
+            return new JsonResponse($books, Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 
     #[Route('/api/add_book', name: 'add_book', methods: ['POST'])]
     public function addBook(Request $request): JsonResponse
@@ -93,7 +109,7 @@ class BookController
     public function removeBook(Book $book): JsonResponse
     {
         try {
-            $removedBook = $this->bookService->removeBook($book);
+            $this->bookService->removeBook($book);
             return new JsonResponse(['message' => 'Book removed successfully!'], Response::HTTP_OK);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);

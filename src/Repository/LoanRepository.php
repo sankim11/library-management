@@ -16,28 +16,79 @@ class LoanRepository extends ServiceEntityRepository
         parent::__construct($registry, Loan::class);
     }
 
-    //    /**
-    //     * @return Loan[] Returns an array of Loan objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('l')
-    //            ->andWhere('l.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('l.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    public function findActiveLoans(): array
+    {
+        return $this->createQueryBuilder('l')
+            ->select('l.id, l.loanDate, l.returnDate, l.status, b.title as bookTitle, m.name as memberName')
+            ->join('l.book', 'b')
+            ->join('l.member', 'm')
+            ->where('l.status = :status')
+            ->setParameter('status', 'ACTIVE')
+            ->orderBy('l.loanDate', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 
-    //    public function findOneBySomeField($value): ?Loan
-    //    {
-    //        return $this->createQueryBuilder('l')
-    //            ->andWhere('l.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    public function findLoansByMember(int $memberId): array
+    {
+        return $this->createQueryBuilder('l')
+            ->select('l.id, l.loanDate, l.returnDate, l.status, b.title as bookTitle')
+            ->join('l.book', 'b')
+            ->where('l.member = :memberId')
+            ->setParameter('memberId', $memberId)
+            ->orderBy('l.loanDate', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function getActiveLoansByMember(int $memberId): int
+    {
+        return $this->createQueryBuilder('l')
+            ->select('COUNT(l.id)')
+            ->where('l.member = :memberId')
+            ->andWhere('l.status = :status')
+            ->setParameter('memberId', $memberId)
+            ->setParameter('status', 'ACTIVE')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function findUpcomingLoansByMember(int $memberId): array
+    {
+        return $this->createQueryBuilder('l')
+            ->select('l.id, l.loanDate, l.returnDate, l.status, b.title as bookTitle')
+            ->join('l.book', 'b')
+            ->where('l.member = :memberId')
+            ->andWhere('l.returnDate > :today')
+            ->setParameter('memberId', $memberId)
+            ->setParameter('today', new \DateTime())
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function getBooksReadByMember(int $memberId): int
+    {
+        return $this->createQueryBuilder('l')
+            ->select('COUNT(l.id)')
+            ->where('l.member = :memberId')
+            ->andWhere('l.status = :status')
+            ->setParameter('memberId', $memberId)
+            ->setParameter('status', 'RETURNED')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function getOverdueLoansByMember(int $memberId): int
+    {
+        return $this->createQueryBuilder('l')
+            ->select('COUNT(l.id)')
+            ->where('l.member = :memberId')
+            ->andWhere('l.returnDate < :today')
+            ->andWhere('l.status = :status')
+            ->setParameter('memberId', $memberId)
+            ->setParameter('today', new \DateTime())
+            ->setParameter('status', 'ACTIVE')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

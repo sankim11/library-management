@@ -18,11 +18,36 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ReservationController
 {
+    private EntityManagerInterface $entityManager;
+    private ReservationService $reservationService;
+    private ValidatorInterface $validator;
+
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private ReservationService $reservationService,
-        private ValidatorInterface $validator
-    ) {}
+        EntityManagerInterface $entityManager,
+        ReservationService $reservationService,
+        ValidatorInterface $validator
+    ) {
+        $this->entityManager = $entityManager;
+        $this->reservationService = $reservationService;
+        $this->validator = $validator;
+    }
+
+    #[Route('/api/get_reservations_by_member/member', name: 'get_reservations_by_member', methods: ['GET'])]
+    public function getReservationsByMember(Request $request): JsonResponse
+    {
+        $memberId = $request->query->get('member_id');
+
+        if (!$memberId) {
+            return new JsonResponse(['error' => 'Member ID is required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $reservations = $this->reservationService->getReservationsByMember($memberId);
+            return new JsonResponse($reservations, Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 
     #[Route('/api/create_reservation', name: 'create_reservation', methods: ['POST'])]
     public function createReservation(Request $request): JsonResponse
@@ -70,27 +95,33 @@ class ReservationController
     }
 
 
-    #[Route('/api/cancel_reservation', name: 'cancel_reservation', methods: ['POST'])]
+    #[Route('/api/cancel_reservation/', name: 'cancel_reservation', methods: ['PUT'])]
     public function cancelReservation(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
-        if (!isset($data['member_id'], $data['book_id'])) {
+        if (!isset($data['user_id'], $data['id'])) {
             return new JsonResponse(
-                ['error' => 'Missing required fields: member_id or book_id'],
+                ['error' => 'Missing required fields: user_id or reservation_id'],
                 Response::HTTP_BAD_REQUEST
             );
         }
 
-        $member = $this->entityManager->getRepository(Member::class)->find($data['member_id']);
-        $book = $this->entityManager->getRepository(Book::class)->find($data['book_id']);
+        $member = $this->entityManager->getRepository(Member::class)->find($data['user_id']);
+        $reservation = $this->entityManager->getRepository(Reservation::class)->find($data['id']);
+
+        if (!$reservation) {
+            throw new \InvalidArgumentException("Reservation not found for ID: {$data['id']}");
+        }
+
+        $book = $reservation->getBook();
 
         if (!$member) {
             return new JsonResponse(['error' => 'Member not found.'], Response::HTTP_BAD_REQUEST);
         }
 
         if (!$book) {
-            return new JsonResponse(['error' => 'Book not found.'], Response::HTTP_BAD_REQUEST);
+            throw new \InvalidArgumentException("No book associated with this reservation.");
         }
 
         $reservation = $this->entityManager->getRepository(Reservation::class)->findOneBy([
@@ -104,19 +135,19 @@ class ReservationController
         }
 
         try {
-            $updatedReservation = $this->reservationService->cancelReservation($reservation, $book);
+            $canceledReservation = $this->reservationService->cancelReservation($reservation, $book);
 
             $output = new ReservationOutput(
-                $updatedReservation->getId(),
-                $updatedReservation->getMember()->getId(),
-                $updatedReservation->getBook()->getId(),
-                $updatedReservation->getReservationDate(),
-                $updatedReservation->getStatus()->value
+                $canceledReservation->getId(),
+                $canceledReservation->getMember()->getId(),
+                $canceledReservation->getBook()->getId(),
+                $canceledReservation->getReservationDate(),
+                $canceledReservation->getStatus()->value
             );
 
             return new JsonResponse($output, Response::HTTP_OK);
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse('asfdas', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

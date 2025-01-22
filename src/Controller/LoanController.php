@@ -135,4 +135,82 @@ class LoanController
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
     }
+
+    #[Route('/api/loans/active', name: 'get_active_loans', methods: ['GET'])]
+    public function getActiveLoans(): JsonResponse
+    {
+        try {
+            $activeLoans = $this->loanService->getActiveLoans();
+            return new JsonResponse($activeLoans, Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/api/get_loans_by_member', name: 'get_loans_by_member', methods: ['GET'])]
+    public function getLoansByMember(Request $request): JsonResponse
+    {
+        $memberId = $request->query->get('member_id');
+
+        if (!$memberId) {
+            return new JsonResponse(['error' => 'Member ID is required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $loans = $this->loanService->getLoansByMember($memberId);
+            return new JsonResponse($loans, Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/api/get_upcoming_loans_by_member', name: 'get_upcoming_loans_by_member    ', methods: ['GET'])]
+    public function getUpcomingLoansByMember(Request $request): JsonResponse
+    {
+        $memberId = $request->query->get('member_id');
+
+        if (!$memberId) {
+            return new JsonResponse(['error' => 'Member ID is required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $upcomingLoans = $this->loanService->getUpcomingLoansByMember($memberId);
+            return new JsonResponse($upcomingLoans, Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/api/loan/extend', name: 'extend_loan', methods: ['POST'])]
+    public function extendLoan(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (!isset($data['loan_id'], $data['new_return_date'])) {
+            return new JsonResponse(['error' => 'Missing required fields: loan_id or new_return_date'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $newReturnDate = new \DateTime($data['new_return_date']);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Invalid date format for new_return_date'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $loan = $this->loanService->extendLoanReturnDate($data['loan_id'], $newReturnDate);
+
+            $loanOutput = new LoanOutput(
+                $loan->getId(),
+                $loan->getMember()->getName(),
+                $loan->getBook()->getTitle(),
+                $loan->getLoanDate()->format('Y-m-d'),
+                $loan->getReturnDate()->format('Y-m-d'),
+                $loan->getStatus()->value
+            );
+
+            return new JsonResponse($loanOutput, Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+    }
 }

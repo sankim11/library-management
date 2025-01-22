@@ -26,6 +26,20 @@ class ReservationService
         $this->validator = $validator;
     }
 
+    public function getReservationsByMember(int $memberId): array
+    {
+        $reservations = $this->entityManager->getRepository(Reservation::class)->findBy(['member' => $memberId]);
+        return array_map(function (Reservation $reservation) {
+            return [
+                'id' => $reservation->getId(),
+                'member' => $reservation->getMember()->getName(),
+                'book' => $reservation->getBook()->getTitle(),
+                'reservationDate' => $reservation->getReservationDate(),
+                'status' => $reservation->getStatus(),
+            ];
+        }, $reservations);
+    }
+
     public function createReservation(Member $member, Book $book, \DateTimeInterface $date, ReservationStatus $status): Reservation
     {
         if ($book->getQuantity() <= 0) {

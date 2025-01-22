@@ -35,17 +35,32 @@ class MemberService
             $this->passwordHasher->hashPassword($member, $password)
         );
 
-        // Validate the Member entity
         $errors = $this->validator->validate($member);
         if (count($errors) > 0) {
             throw new ValidationException((string) $errors);
         }
 
-        // Persist and save the member
         $this->entityManager->persist($member);
         $this->entityManager->flush();
 
         return $member;
+    }
+
+    public function updateMember(int $id, array $data): void
+    {
+        $member = $this->entityManager->getRepository(Member::class)->find($id);
+        $member->setName($data['name']);
+        
+        if (isset($data['role'])) {
+            try {
+                $role = Role::from($data['role']);
+                $member->setRole($role);
+            } catch (\ValueError $e) {
+                throw new \InvalidArgumentException("Invalid role provided: {$data['role']}");
+            }
+        }
+
+        $this->entityManager->flush();
     }
 
     public function deleteMember(int $id): void

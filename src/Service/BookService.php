@@ -10,6 +10,21 @@ class BookService
 {
     public function __construct(private EntityManagerInterface $entityManager) {}
 
+    public function getBooks(): array
+    {
+        $books = $this->entityManager->getRepository(Book::class)->findBy(['deletedAt' => null]);
+        return array_map(function (Book $book) {
+            return [
+                'id' => $book->getId(),
+                'title' => $book->getTitle(),
+                'author' => $book->getAuthor(),
+                'isbn' => $book->getIsbn(),
+                'publishedDate' => $book->getPublishedDate(),
+                'quantity' => $book->getQuantity(),
+            ];
+        }, $books);
+    }
+
     public function addBook(BookInput $bookInput): Book
     {
         $book = new Book();
@@ -43,6 +58,7 @@ class BookService
             $book->setQuantity($bookInput->quantity);
         }
 
+        $this->entityManager->persist($book);
         $this->entityManager->flush();
 
         return $book;
