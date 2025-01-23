@@ -35,8 +35,8 @@ yarn-error.log
 ###< lexik/jwt-authentication-bundle ###
 
 .env
-.env/dev
-.env/test
+.env.dev
+.env.test
 .env.local
 .env.local.php
 .env.*.local
